@@ -1,0 +1,40 @@
+﻿@{
+    ViewBag.Title = "Profile";
+    var username = ViewBag.Username as string;
+}
+<div class="mb-3 p-3 text-white d-flex align-items-center"
+     style="background-color:#a23322;border-radius:12px;">
+    <img src="@Url.Action("Avatar","Account", new { u = username })" class="rounded-circle mr-3" style="width:36px;height:36px;object-fit:cover;" />
+    <div class="font-weight-bold">AkTask — Profile</div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="d-flex align-items-center mb-3">
+            <img src="@Url.Action("Avatar","Account", new { u = username })" class="rounded-circle mr-3" style="width:96px;height:96px;object-fit:cover;border:1px solid #eee;" />
+            <div>
+                <div class="h5 mb-1">@username</div>
+                <div class="text-muted">Change your profile picture</div>
+            </div>
+        </div>
+
+        @using (Html.BeginForm("Profile", "Account", FormMethod.Post, new { enctype = "multipart/form-data" }))
+        {
+            @Html.AntiForgeryToken()
+            <div class="form-group">
+                <input type="file" name="file" accept="image/*" class="form-control-file" />
+            </div>
+            <button type="submit" class="btn btn-success">Save</button>
+            <a href="javascript:history.back()" class="btn btn-secondary ml-2">Back</a>
+        }
+
+        @if (TempData["Message"] != null)
+        {
+            <div class="alert alert-info mt-3">@TempData["Message"]</div>
+        }
+        else if (ViewBag.Message != null)
+        {
+            <div class="alert alert-info mt-3">@ViewBag.Message</div>
+        }
+    </div>
+</div>

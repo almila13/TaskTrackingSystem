@@ -1,0 +1,112 @@
+﻿@model WebApplication1.Models.TaskItems
+@{
+    ViewBag.Title = "Assign New Task";
+    var displayName = (Session["DisplayName"] as string) ?? (Session["Username"] as string);
+}
+<!-- TOPBAR -->
+<div id="topbar" class="mb-3 p-3 text-white d-flex align-items-center justify-content-between"
+     style="background-color:#a23322;border-radius:16px;">
+    <div class="d-flex align-items-center">
+        <button id="menuToggle" class="btn btn-link text-white mr-3 p-0" style="font-size:24px;line-height:1;">&#9776;</button>
+        <img src="@Url.Content("~/Content/Images/akkon_logo_new.png")" alt="logo" style="height:22px;" class="mr-2" />
+        <span class="font-weight-bold mr-3">AkTask</span>
+        <span>Welcome, <strong>@displayName</strong>!</span>
+    </div>
+    <div></div>
+</div>
+<style>
+    #topbar .btn {
+        border-radius: 6px !important;
+    }
+
+    #sidebar {
+        overflow: visible
+    }
+
+    .popover {
+        z-index: 12000 !important
+    }
+</style>
+
+<!-- SIDEBAR -->
+<div id="sidebar" style="position:fixed;top:0;left:0;height:100vh;width:260px;background:#fff;
+     box-shadow:2px 0 12px rgba(0,0,0,.15);transform:translateX(-100%);transition:transform .25s ease;z-index:9999;">
+    <div class="p-3 border-bottom d-flex align-items-center" style="background:#a23322;color:#fff;">
+        <strong class="mr-2">Menu</strong>
+        <span class="ml-auto" id="menuClose" style="cursor:pointer;">✕</span>
+    </div>
+    <div class="d-flex flex-column" style="height:calc(100vh - 56px);">
+        <div class="list-group list-group-flush">
+            <a class="list-group-item list-group-item-action" href="@Url.Action("MyTasks","Admin")">My Tasks</a>
+            <a class="list-group-item list-group-item-action" href="@Url.Action("Calendar","Admin")">Calendar</a>
+            <a class="list-group-item list-group-item-action" href="@Url.Action("Index","Admin")">Assigned Tasks</a>
+            <a class="list-group-item list-group-item-action" href="@Url.Action("Create","Admin")">Assign New Task</a>
+            <a class="list-group-item list-group-item-action" href="@Url.Action("Index","Status")">Status Options</a>
+        </div>
+        <div class="mt-auto border-top p-3 d-flex align-items-center">
+            <img src="@Url.Action("Avatar","Account")"
+                 class="rounded-circle mr-2" style="width:28px;height:28px;object-fit:cover;"
+                 onerror="this.onerror=null; this.src='@Url.Content("~/Content/Images/default_avatar.png")';" />
+            <button id="profileBtn" type="button" class="btn btn-link p-0 text-dark font-weight-bold">
+                @displayName ▾
+            </button>
+        </div>
+        <div id="profilePopover" class="d-none">
+            <div class="list-group">
+                <a href="@Url.Action("Profile","Account")" class="list-group-item list-group-item-action">Change profile picture</a>
+                <a href="@Url.Action("Logout","Account")" class="list-group-item list-group-item-action text-danger">Logout</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<h2 class="mb-3">Assign New Task</h2>
+
+@using (Html.BeginForm())
+{
+    @Html.AntiForgeryToken()
+
+    <div class="form-group">
+        @Html.LabelFor(m => m.Title)
+        @Html.TextBoxFor(m => m.Title, new { @class = "form-control" })
+    </div>
+
+    <div class="form-group">
+        @Html.Label("Assign To")
+        @Html.DropDownListFor(m => m.AssignedTo, (SelectList)ViewBag.Users, "-- Select User --", new { @class = "form-control" })
+    </div>
+
+    <div class="form-group">
+        @Html.LabelFor(m => m.StartDate, "Start Date")
+        @Html.TextBoxFor(m => m.StartDate, "{0:yyyy-MM-ddTHH:mm}", new { @class = "form-control", type = "datetime-local" })
+    </div>
+
+    <div class="form-group">
+        @Html.LabelFor(m => m.Note)
+        @Html.TextAreaFor(m => m.Note, new { @class = "form-control", rows = 3, placeholder = "Optional note..." })
+    </div>
+
+    <div class="form-group">
+        @Html.LabelFor(m => m.EstimatedEndDate, "Estimated End Date")
+        @Html.TextBoxFor(m => m.EstimatedEndDate, "{0:yyyy-MM-ddTHH:mm}", new { @class = "form-control", type = "datetime-local" })
+    </div>
+
+    <button type="submit" class="btn btn-success">Create</button>
+    @Html.ActionLink("Back", "Index", null, new { @class = "btn btn-secondary ml-2" })
+}
+
+@section Scripts{
+    <script>
+        var sb = document.getElementById('sidebar');
+        document.getElementById('menuToggle').onclick = function () { sb.style.transform = 'translateX(0)'; };
+        document.getElementById('menuClose').onclick = function () { sb.style.transform = 'translateX(-100%)'; };
+
+        $('#profileBtn').popover({
+            html: true, trigger: 'click', placement: 'right', container: '#sidebar', sanitize: false,
+            content: function () { return $('#profilePopover').html(); }, title: ' '
+        });
+        $(document).on('click', function (e) { if (!$(e.target).closest('.popover, #profileBtn').length) { $('#profileBtn').popover('hide'); } });
+    </script>
+}
+
+

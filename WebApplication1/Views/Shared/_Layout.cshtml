@@ -1,0 +1,62 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewBag.Title - AkTask</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+    <!-- Modern font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        html, body {
+            height: 100%;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+            letter-spacing: .2px;
+        }
+
+        /* Popover'ın sidebar arkasına düşmesini engelle */
+        #sidebar {
+            overflow: visible;
+        }
+
+        .popover {
+            z-index: 12000 !important;
+        }
+
+        /* Genel yuvarlak butonlar */
+        .btn {
+            border-radius: 999px !important;
+        }
+
+        .btn-outline-light {
+            border-width: 2px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container body-content mt-4">
+        @RenderBody()
+        <hr />
+        <footer class="text-center text-muted mb-4">
+            <p>&copy; @DateTime.Now.Year - AkTask</p>
+        </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+    @RenderSection("scripts", required: false)
+</body>
+</html>
+
+
+
+

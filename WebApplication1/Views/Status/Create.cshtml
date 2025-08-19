@@ -1,0 +1,18 @@
+﻿@model WebApplication1.Models.StatusOptions
+@{
+    ViewBag.Title = "Add Status Option";
+}
+<h2>Add Status Option</h2>
+
+@using (Html.BeginForm())
+{
+    @Html.AntiForgeryToken()
+    <div class="form-group">
+        @Html.LabelFor(m => m.Name)
+        @Html.TextBoxFor(m => m.Name, new { @class = "form-control" })
+    </div>
+    <button type="submit" class="btn btn-primary">Add</button>
+    @Html.ActionLink("Back", "Index", "Status", null, new { @class = "btn btn-secondary ml-2" })
+}
+
+

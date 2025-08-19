@@ -1,0 +1,217 @@
+﻿@{
+    ViewBag.Title = "Calendar";
+    var displayName = (Session["DisplayName"] as string) ?? (Session["Username"] as string);
+}
+<!-- TOPBAR -->
+<div id="topbar" class="mb-3 p-3 text-white d-flex align-items-center justify-content-between"
+     style="background-color:#a23322;border-radius:16px;">
+    <div class="d-flex align-items-center">
+        <button id="menuToggle" class="btn btn-link text-white mr-3 p-0" style="font-size:24px;line-height:1;">&#9776;</button>
+        <img src="@Url.Content("~/Content/Images/akkon_logo_new.png")" alt="logo" style="height:22px;" class="mr-2" />
+        <span class="font-weight-bold mr-3">AkTask</span>
+        <span>Welcome, <strong>@displayName</strong>!</span>
+    </div>
+    <div></div>
+</div>
+
+<!-- SIDEBAR (Admin’deki diğer sayfalarla aynı menü) -->
+<div id="sidebar" style="position:fixed;top:0;left:0;height:100vh;width:260px;background:#fff;
+     box-shadow:2px 0 12px rgba(0,0,0,.15);transform:translateX(-100%);transition:transform .25s ease;z-index:9999;">
+    <div class="p-3 border-bottom d-flex align-items-center" style="background:#a23322;color:#fff;">
+        <strong class="mr-2">Menu</strong>
+        <span class="ml-auto" id="menuClose" style="cursor:pointer;">✕</span>
+    </div>
+
+    <div class="d-flex flex-column" style="height:calc(100vh - 56px);">
+        <div class="list-group list-group-flush">
+            <a class="list-group-item list-group-item-action" href="@Url.Action("MyTasks","Admin")">My Tasks</a>
+            <a class="list-group-item list-group-item-action" href="@Url.Action("Calendar","Admin")">Calendar</a>
+            <a class="list-group-item list-group-item-action" href="@Url.Action("Index","Admin")">Assigned Tasks</a>
+            <a class="list-group-item list-group-item-action" href="@Url.Action("Create","Admin")">Assign New Task</a>
+            <a class="list-group-item list-group-item-action" href="@Url.Action("Index","Status")">Status Options</a>
+        </div>
+
+        <div class="mt-auto border-top p-3 d-flex align-items-center">
+            <img src="@Url.Action("Avatar","Account")"
+                 class="rounded-circle mr-2" style="width:28px;height:28px;object-fit:cover;"
+                 onerror="this.onerror=null; this.src='@Url.Content("~/Content/Images/default_avatar.png")';" />
+            <button id="profileBtn" type="button" class="btn btn-link p-0 text-dark font-weight-bold">
+                @displayName ▾
+            </button>
+        </div>
+
+        <div id="profilePopover" class="d-none">
+            <div class="list-group">
+                <a href="@Url.Action("Profile","Account")" class="list-group-item list-group-item-action">Change profile picture</a>
+                <a href="@Url.Action("Logout","Account")" class="list-group-item list-group-item-action text-danger">Logout</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<h2 class="mb-3">Calendar</h2>
+
+<!-- FullCalendar -->
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/locales-all.min.js"></script>
+
+<style>
+    /* Etkinlik detay baloncuğu */
+    .event-pop {
+        position: fixed;
+        z-index: 12000;
+        background: #fff;
+        color: #111;
+        border: 1px solid rgba(0,0,0,.12);
+        border-radius: 12px;
+        box-shadow: 0 14px 32px rgba(0,0,0,.18);
+        min-width: 260px;
+        max-width: 360px;
+        padding: 14px;
+    }
+
+    .event-pop__head {
+        font-weight: 700;
+        margin-bottom: 6px;
+    }
+
+    .event-pop__row {
+        margin: 4px 0;
+        font-size: .95rem;
+    }
+
+    .event-pop__note {
+        margin-top: 8px;
+        padding: 8px;
+        border-radius: 10px;
+        background: #f8fafc;
+        border: 1px solid #eef2f7;
+        white-space: pre-wrap;
+    }
+
+    .event-pop__actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 10px;
+    }
+</style>
+
+<div id="calendar"></div>
+
+@section Scripts{
+    <script>
+/* ---- Sidebar ---- */
+var sb = document.getElementById('sidebar');
+document.getElementById('menuToggle').onclick = function(){ sb.style.transform = 'translateX(0)'; };
+document.getElementById('menuClose').onclick  = function(){ sb.style.transform = 'translateX(-100%)'; };
+
+/* Basit profile popover (Bootstrap şart değil) */
+(function(){
+  var btn = document.getElementById('profileBtn');
+  var popHtml = document.getElementById('profilePopover').innerHTML;
+  var pop;
+  btn.addEventListener('click', function(e){
+    e.stopPropagation();
+    if(pop){ document.body.removeChild(pop); pop=null; return; }
+    pop = document.createElement('div');
+    pop.style.position='fixed';
+    var rect = btn.getBoundingClientRect();
+    pop.style.left = (rect.left) + 'px';
+    pop.style.top  = (rect.bottom + 8) + 'px';
+    pop.style.background='#fff';
+    pop.style.border='1px solid rgba(0,0,0,.12)';
+    pop.style.borderRadius='10px';
+    pop.style.boxShadow='0 10px 24px rgba(0,0,0,.12)';
+    pop.style.zIndex='12000';
+    pop.innerHTML = popHtml;
+    document.body.appendChild(pop);
+  });
+  document.addEventListener('click', function(){ if(pop){ document.body.removeChild(pop); pop=null; }});
+})();
+
+/* ---- FullCalendar ---- */
+document.addEventListener('DOMContentLoaded', function () {
+  var el = document.getElementById('calendar');
+
+  function escapeHtml(s){
+    if(!s) return '';
+    return s.replace(/[&<>"']/g, function(m){
+      return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]);
+    });
+  }
+
+  var pop; // event-detail popup
+
+  function closeEventPop(){
+    if(pop){ pop.remove(); pop=null; }
+  }
+  document.addEventListener('click', function(e){
+    // takvim dışında tıklama -> kapat
+    if(pop && !pop.contains(e.target)) closeEventPop();
+  });
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'Escape') closeEventPop();
+  });
+
+  function showEventDetail(info){
+    closeEventPop();
+
+    var props = info.event.extendedProps || {};
+    var idStr = (info.event.id || '').toString();
+    var taskId = idStr.split('-')[0]; // "123-start" -> "123"
+
+    var html =
+      '<div class="event-pop">' +
+        '<div class="event-pop__head">' + escapeHtml(info.event.title || '') + '</div>' +
+        '<div class="event-pop__row"><b>Date:</b> ' + escapeHtml(props.when || '') + '</div>' +
+        '<div class="event-pop__row"><b>Status:</b> ' + escapeHtml(props.status || '-') + '</div>' +
+        (props.assignedTo ? '<div class="event-pop__row"><b>Assigned:</b> ' + escapeHtml(props.assignedTo) + '</div>' : '') +
+        (props.note ? '<div class="event-pop__note">' + escapeHtml(props.note) + '</div>' : '') +
+        '<div class="event-pop__actions">' +
+           '<a class="btn btn-sm btn-primary" href="/Admin/Edit/' + taskId + '">Edit</a>' +
+           '<button type="button" class="btn btn-sm btn-secondary" id="closePopBtn">Close</button>' +
+        '</div>' +
+      '</div>';
+
+    pop = document.createElement('div');
+    pop.innerHTML = html;
+    pop = pop.firstChild;
+    document.body.appendChild(pop);
+
+    // Tıklanan noktanın yakınına yerleştir
+    var x = info.jsEvent.pageX, y = info.jsEvent.pageY;
+    var pad = 12;
+    var w = pop.offsetWidth, h = pop.offsetHeight;
+    var maxL = window.pageXOffset + document.documentElement.clientWidth - w - pad;
+    var maxT = window.pageYOffset + document.documentElement.clientHeight - h - pad;
+    var left = Math.min(Math.max(pad, x - w/2), maxL);
+    var top  = Math.min(Math.max(pad, y + pad), maxT);
+    pop.style.left = left + 'px';
+    pop.style.top  = top  + 'px';
+
+    document.getElementById('closePopBtn').onclick = closeEventPop;
+
+    info.jsEvent.preventDefault();
+    info.jsEvent.stopPropagation();
+  }
+
+  var calendar = new FullCalendar.Calendar(el, {
+    height: 'auto',
+    initialView: 'dayGridMonth',
+    locale: 'tr',
+    firstDay: 1,
+    // "bugün" butonunu istemiyordun → kaldırıldı
+    headerToolbar: { left: 'prev,next', center: 'title', right: '' },
+    events: '@Url.Action("CalendarEvents","Admin")',
+    eventClick: showEventDetail
+  });
+
+  calendar.render();
+});
+    </script>
+}
+
+
+
+

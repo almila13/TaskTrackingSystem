@@ -1,0 +1,71 @@
+﻿@model WebApplication1.Models.TaskItems
+@{
+    ViewBag.Title = "Create Task";
+    var username = Session["Username"] as string;
+}
+<div class="mb-3 p-3 text-white d-flex align-items-center justify-content-between"
+     style="background-color:#a23322;border-radius:12px;">
+    <div class="d-flex align-items-center">
+        <button id="menuToggle" class="btn btn-link text-white mr-3 p-0" style="font-size:24px;line-height:1;">&#9776;</button>
+        <img src="@Url.Content("~/Content/Images/akkon_logo_new.png")" alt="logo" style="height:22px;" class="mr-2" />
+        <span class="font-weight-bold mr-3">AkTask</span>
+        <span>Welcome, <strong>@username</strong>!</span>
+    </div>
+</div>
+
+<!-- Sidebar -->
+<div id="sidebar" style="position:fixed;top:0;left:0;height:100vh;width:260px;background:#fff;box-shadow:2px 0 12px rgba(0,0,0,.15);transform:translateX(-100%);transition:transform .25s ease;z-index:9999;">
+    <div class="p-3 border-bottom d-flex align-items-center" style="background:#a23322;color:#fff;">
+        <strong class="mr-2">Menu</strong>
+        <span class="ml-auto" id="menuClose" style="cursor:pointer;">✕</span>
+    </div>
+    <div class="list-group list-group-flush">
+        <a class="list-group-item list-group-item-action" href="@Url.Action("Index","User")">My Tasks</a>
+        @if ((Session["Username"] as string)?.ToLower() == "admin")
+        {
+            <a class="list-group-item list-group-item-action" href="@Url.Action("Index","Admin")">Admin Task List</a>
+            <a class="list-group-item list-group-item-action" href="@Url.Action("Index","Status")">Status Options</a>
+        }
+        <a class="list-group-item list-group-item-action" href="@Url.Action("Logout","Account")">Logout</a>
+    </div>
+</div>
+
+<h3>Create New Task</h3>
+@using (Html.BeginForm())
+{
+    @Html.AntiForgeryToken()
+
+    <div class="form-group">
+        @Html.LabelFor(m => m.Title)
+        @Html.TextBoxFor(m => m.Title, new { @class = "form-control", placeholder = "Title" })
+    </div>
+
+    <div class="form-group">
+        @Html.LabelFor(m => m.StartDate, "Start Date")
+        @Html.TextBoxFor(m => m.StartDate, "{0:yyyy-MM-ddTHH:mm}", new { @class = "form-control", type = "datetime-local" })
+    </div>
+
+    <div class="form-group">
+        @Html.LabelFor(m => m.EstimatedEndDate, "Estimated End Date")
+        @Html.TextBoxFor(m => m.EstimatedEndDate, "{0:yyyy-MM-ddTHH:mm}", new { @class = "form-control", type = "datetime-local" })
+    </div>
+
+    <div class="form-group">
+        @Html.LabelFor(m => m.Note)
+        @Html.TextAreaFor(m => m.Note, new { @class = "form-control", rows = 3, placeholder = "Optional note..." })
+    </div>
+
+    <button type="submit" class="btn btn-success">Create</button>
+    @Html.ActionLink("Back", "Index", null, new { @class = "btn btn-secondary ml-2" })
+}
+
+@section Scripts{
+    <script>
+  var sb=document.getElementById('sidebar');
+  var mt=document.getElementById('menuToggle');
+  var mc=document.getElementById('menuClose');
+  if(mt){ mt.onclick=function(){ sb.style.transform='translateX(0)'; }; }
+  if(mc){ mc.onclick=function(){ sb.style.transform='translateX(-100%)'; }; }
+    </script>
+}
+

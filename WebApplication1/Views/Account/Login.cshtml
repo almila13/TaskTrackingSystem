@@ -1,0 +1,47 @@
+﻿@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <title>AkTask - Giriş Yap</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="h-screen font-sans bg-gray-100">
+    <div class="grid grid-cols-1 md:grid-cols-2 h-full">
+        <!-- Sol -->
+        <div class="bg-yellow-100 flex items-center justify-center px-10 relative overflow-hidden">
+            <div class="absolute top-6 left-6">
+                <img src="@Url.Content("~/Content/Images/akkon_logo_new.png")" alt="Akkon Logo" class="h-12">
+            </div>
+            <div class="text-left">
+                <h1 class="text-4xl font-bold mb-2 uppercase" style="color:#a23322;">PLAN SMART.</h1>
+                <p class="text-4xl font-bold mb-2 uppercase" style="color:#e86d42;">WORK FAST.</p>
+                <p class="text-4xl font-bold uppercase" style="color:#e86d42;">DELIVER BETTER.</p>
+            </div>
+        </div>
+
+        <!-- Sağ -->
+        <div class="bg-white flex items-center justify-center px-6 py-4 rounded-2xl w-full max-w-md"
+             style="box-shadow: 20px 0px 60px -10px rgba(255, 140, 0, 0.4);">
+            <div class="w-full relative -top-6">
+                <h2 class="text-3xl font-bold mb-1 text-center text-gray-800">Let's start!</h2>
+                <p class="text-base font-semibold mb-6 text-gray-700 text-center">Log In</p>
+
+                <!-- Microsoft ile giriş: teknik akışı bozmadan sadece buton -->
+                <a href="@Url.Action("SignIn","Account")"
+                   class="block w-full text-white font-semibold py-3 rounded-full text-center transition-all duration-300 shadow-md"
+                   style="background-color:#a23322;">
+                    Sign in with Microsoft
+                </a>
+
+                @if (ViewBag.Error != null)
+                {
+                    <div class="mt-3 text-red-600 text-sm text-center">@ViewBag.Error</div>
+                }
+            </div>
+        </div>
+    </div>
+</body>
+</html>

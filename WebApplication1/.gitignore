@@ -1,0 +1,16 @@
+﻿
+bin/
+obj/
+.vs/
+packages/
+*.user
+*.suo
+*.pubxml
+*.pubxml.user
+
+
+/App_Data/*.mdf
+/App_Data/*.ldf
+
+
+Web.config

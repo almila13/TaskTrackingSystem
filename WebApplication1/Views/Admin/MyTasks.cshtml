@@ -1,0 +1,304 @@
+﻿@model IEnumerable<WebApplication1.Models.TaskItems>
+@{
+    ViewBag.Title = "My Tasks";
+    var displayName = (Session["DisplayName"] as string) ?? (Session["Username"] as string);
+    string searchTerm = Request.QueryString["search"];
+
+    Func<string, string> statusChip = s =>
+    {
+        if (string.IsNullOrWhiteSpace(s)) return "chip chip-muted";
+        switch (s.Trim().ToLower())
+        {
+            case "completed": return "chip chip-success";
+            case "in progress": return "chip chip-warning";
+            case "on hold": return "chip chip-info";
+            case "cancelled": return "chip chip-danger";
+            default: return "chip chip-muted";
+        }
+    };
+    Func<string, string> cardTone = s =>
+    {
+        if (string.IsNullOrWhiteSpace(s)) return "tone-muted";
+        switch (s.Trim().ToLower())
+        {
+            case "completed": return "tone-success";
+            case "in progress": return "tone-warning";
+            case "on hold": return "tone-info";
+            case "cancelled": return "tone-danger";
+            default: return "tone-muted";
+        }
+    };
+    string fmt(DateTime? d) => d.HasValue ? d.Value.ToString("dd.MM.yyyy HH:mm") : "-";
+    string highlight(string text)
+    {
+        if (string.IsNullOrWhiteSpace(searchTerm) || string.IsNullOrWhiteSpace(text)) return text;
+        return System.Text.RegularExpressions.Regex.Replace(
+            text, System.Text.RegularExpressions.Regex.Escape(searchTerm),
+            m => $"<mark>{m.Value}</mark>",
+            System.Text.RegularExpressions.RegexOptions.IgnoreCase
+        );
+    }
+}
+
+<!-- TOPBAR -->
+<div id="topbar" class="mb-3 p-3 text-white d-flex align-items-center justify-content-between"
+     style="background-color:#a23322;border-radius:16px;">
+    <div class="d-flex align-items-center">
+        <button id="menuToggle" class="btn btn-link text-white mr-3 p-0" style="font-size:24px;line-height:1;">&#9776;</button>
+        <img src="@Url.Content("~/Content/Images/akkon_logo_new.png")" alt="logo" style="height:22px;" class="mr-2" />
+        <span class="font-weight-bold mr-3">AkTask</span>
+        <span>Welcome, <strong>@displayName</strong>!</span>
+    </div>
+    <div class="d-flex align-items-center">
+        <button id="toggleSearch" class="btn btn-outline-light mr-2">Search</button>
+        <button id="toggleFilter" class="btn btn-outline-light mr-3">Filter</button>
+        @Html.ActionLink("Create", "CreateSelf", "Admin", null, new { @class = "btn btn-light text-dark" })
+    </div>
+</div>
+
+<style>
+    #topbar .btn, #topbar .btn-outline-light {
+        border-radius: 6px !important;
+    }
+</style>
+
+<!-- SIDEBAR -->
+<div id="sidebar" style="position:fixed;top:0;left:0;height:100vh;width:260px;background:#fff;box-shadow:2px 0 12px rgba(0,0,0,.15);transform:translateX(-100%);transition:transform .25s ease;z-index:9999;">
+    <div class="p-3 border-bottom d-flex align-items-center" style="background:#a23322;color:#fff;">
+        <strong class="mr-2">Menu</strong>
+        <span class="ml-auto" id="menuClose" style="cursor:pointer;">✕</span>
+    </div>
+    <div class="d-flex flex-column" style="height:calc(100vh - 56px);">
+        <div class="list-group list-group-flush">
+            <a class="list-group-item list-group-item-action" href="@Url.Action("MyTasks","Admin")">My Tasks</a>
+            <a class="list-group-item list-group-item-action" href="@Url.Action("Calendar","Admin")">Calendar</a>
+            <a class="list-group-item list-group-item-action" href="@Url.Action("Index","Admin")">Assigned Tasks</a>
+            <a class="list-group-item list-group-item-action" href="@Url.Action("Create","Admin")">Assign New Task</a>
+            <a class="list-group-item list-group-item-action" href="@Url.Action("Index","Status")">Status Options</a>
+        </div>
+        <div class="mt-auto border-top p-3 d-flex align-items-center">
+            <img src="@Url.Action("Avatar","Account")" class="rounded-circle mr-2"
+                 style="width:28px;height:28px;object-fit:cover;"
+                 onerror="this.onerror=null; this.src='@Url.Content("~/Content/Images/default_avatar.png")';" />
+            <button id="profileBtn" type="button" class="btn btn-link p-0 text-dark font-weight-bold">
+                @displayName ▾
+            </button>
+        </div>
+        <div id="profilePopover" class="d-none">
+            <div class="list-group">
+                <a href="@Url.Action("Profile","Account")" class="list-group-item list-group-item-action">Change profile picture</a>
+                <a href="@Url.Action("Logout","Account")" class="list-group-item list-group-item-action text-danger">Logout</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<h2 class="mb-3">My Tasks</h2>
+
+<!-- Kart stilleri (seninle aynı) -->
+<style>
+    mark {
+        background: #ffb3c7;
+        color: #111;
+        padding: 2px 6px;
+        border-radius: 8px;
+    }
+
+    .cards {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .task-card {
+        position: relative;
+        border: 1px solid #eee;
+        background: #fff;
+        border-radius: 24px;
+        padding: 18px;
+        box-shadow: 0 8px 30px rgba(0,0,0,.06);
+    }
+
+        .task-card:before {
+            content: "";
+            position: absolute;
+            left: 10px;
+            top: 10px;
+            bottom: 10px;
+            width: 6px;
+            border-radius: 8px;
+            opacity: .9;
+        }
+
+    .tone-success:before {
+        background: #34d399;
+    }
+
+    .tone-warning:before {
+        background: #f59e0b;
+    }
+
+    .tone-info:before {
+        background: #60a5fa;
+    }
+
+    .tone-danger:before {
+        background: #ef4444;
+    }
+
+    .tone-muted:before {
+        background: #d1d5db;
+    }
+
+    .task-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .task-title {
+        font-weight: 700;
+        font-size: 1.05rem;
+        color: #0f172a;
+    }
+
+    .chip {
+        padding: .28rem .7rem;
+        font-size: .78rem;
+        border-radius: 999px;
+        font-weight: 600;
+        border: 1px solid transparent;
+    }
+
+    .chip-success {
+        background: #ecfdf5;
+        color: #065f46;
+        border-color: #a7f3d0;
+    }
+
+    .chip-warning {
+        background: #fffbeb;
+        color: #92400e;
+        border-color: #fde68a;
+    }
+
+    .chip-info {
+        background: #eff6ff;
+        color: #1e3a8a;
+        border-color: #93c5fd;
+    }
+
+    .chip-danger {
+        background: #fef2f2;
+        color: #7f1d1d;
+        border-color: #fecaca;
+    }
+
+    .chip-muted {
+        background: #f3f4f6;
+        color: #374151;
+        border-color: #e5e7eb;
+    }
+
+    .meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 18px;
+        margin-top: 8px;
+        color: #6b7280;
+        font-weight: 500;
+    }
+
+        .meta b {
+            color: #334155;
+            font-weight: 700;
+        }
+
+    .note {
+        margin-top: 12px;
+        background: #f8fafc;
+        border: 1px solid #eef2f7;
+        padding: 12px 14px;
+        border-radius: 18px;
+    }
+
+    .note-body {
+        white-space: pre-wrap;
+        font-size: .95rem;
+        color: #334155;
+        line-height: 1.5;
+    }
+
+    .actions {
+        margin-top: 12px;
+        display: flex;
+        gap: 8px;
+    }
+</style>
+
+<!-- Search / Filter -->
+<div id="searchBox" style="display:none;" class="mb-3">
+    @using (Html.BeginForm("MyTasks", "Admin", FormMethod.Get))
+    {<input type="text" name="search" value="@searchTerm" placeholder="Search tasks..." class="form-control" />}
+</div>
+<div id="filterBox" style="display:none;" class="mb-3">
+    @using (Html.BeginForm("MyTasks", "Admin", FormMethod.Get))
+    {
+        <div class="form-group"><label>Status</label>@Html.DropDownList("statusFilter", new SelectList(ViewBag.StatusList as List<string>), "All", new { @class = "form-control" })</div>
+        <div class="form-group"><label>Start Date From</label><input type="date" name="startDateFrom" class="form-control" /></div>
+        <div class="form-group"><label>Estimated End Date To</label><input type="date" name="endDateTo" class="form-control" /></div>
+        <input type="submit" value="Apply Filters" class="btn btn-primary mt-2" />
+    }
+</div>
+
+<div class="cards">
+    @foreach (var t in Model)
+    {
+        var tone = cardTone(t.Status);
+        <div class="task-card @tone">
+            <div class="task-head">
+                <div class="task-title">@Html.Raw(highlight(t.Title))</div>
+                <span class="@statusChip(t.Status)">@Html.Raw(highlight(t.Status))</span>
+            </div>
+            <div class="meta">
+                <div><b>Start:</b> @fmt(t.StartDate)</div>
+                <div><b>End:</b> @fmt(t.EstimatedEndDate)</div>
+            </div>
+            @if (!string.IsNullOrWhiteSpace(t.Note))
+            {<div class="note"><div class="note-body">@Html.Raw(highlight(t.Note))</div></div>}
+            <div class="actions">
+                @Html.ActionLink("Edit", "Edit", new { id = t.Id }, new { @class = "btn btn-sm btn-outline-primary" })
+                @Html.ActionLink("Delete", "Delete", new { id = t.Id }, new { @class = "btn btn-sm btn-outline-danger" })
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts{
+    <script>
+        var sb = document.getElementById('sidebar');
+        document.getElementById('menuToggle').onclick = function () { sb.style.transform = 'translateX(0)'; };
+        document.getElementById('menuClose').onclick = function () { sb.style.transform = 'translateX(-100%)'; };
+
+        document.getElementById("toggleSearch").onclick = function () {
+            var el = document.getElementById("searchBox");
+            el.style.display = el.style.display === "none" ? "block" : "none";
+        };
+        document.getElementById("toggleFilter").onclick = function () {
+            var el = document.getElementById("filterBox");
+            el.style.display = el.style.display === "none" ? "block" : "none";
+        };
+
+        $('#profileBtn').popover({
+            html: true, trigger: 'click', placement: 'right', container: '#sidebar', sanitize: false,
+            content: function () { return $('#profilePopover').html(); }, title: ' '
+        });
+        $(document).on('click', function (e) {
+            if (!$(e.target).closest('.popover, #profileBtn').length) $('#profileBtn').popover('hide');
+        });
+    </script>
+}
+
+
+
