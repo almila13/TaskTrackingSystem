@@ -1,49 +1,56 @@
-TaskTrackingSystem (AkTask)
+📌 TaskTrackingSystem
+🔍 Overview
 
-Internal task-tracking web app built during my internship. Helps teammates see their own tasks; lets admins assign, filter, and review work.
+TaskTrackingSystem is a simple and functional ASP.NET Web Application designed to help users track and manage their tasks efficiently.
+It provides a clean interface for organizing daily responsibilities with basic CRUD operations.
 
-Overview
+🎯 Purpose
 
-Sign-in with work account, cookie session (Username + DisplayName)
+Allow users to easily organize and follow their tasks
 
-Admin vs User routing (allow-list → “Admin” claim)
+Provide a lightweight and user-friendly web solution
 
-Admin: Assigned Tasks (search/filter + paging), My Tasks, Calendar, Create (others), Create (Mine), Status Options
+Demonstrate core CRUD functionality with database integration
 
-User: My Tasks
+🚀 Features
 
-Task model: Title, Status, AssignedTo, StartDate, EstimatedEndDate, Note
+User authentication (login/logout)
 
-Notes append as username (dd.MM.yyyy HH:mm): text
+Add, edit, delete, and view tasks
 
-Calendar: shows only the signed-in user’s tasks; popover on click
+Persistent storage via SQL Server
 
-Avatar upload with fallback
+Intuitive and responsive UI
 
-Tech Stack
+🛠️ Technologies Used
 
-ASP.NET MVC (.NET Framework 4.7.2), OWIN (Cookie + OIDC)
+ASP.NET MVC / Web Forms
 
-Entity Framework 6, SQL Server (TaskDB: TaskItems, Users, StatusOptions)
+Entity Framework 6
 
-UI: Bootstrap-style utilities, FullCalendar v5
+Microsoft SQL Server
 
-Quick Start
+C#
 
-Clone & open: WebApplication1.sln in Visual Studio.
+⚙️ Installation & Setup
 
-Config: Copy Web.config.example → Web.config, fill placeholders (TenantId, ClientId, ClientSecret, DB).
+Clone the repository:
 
-DB: Point connectionStrings to your SQL instance (TaskDB).
+git clone https://github.com/almila13/TaskTrackingSystem.git
 
-Run: F5 (IIS Express). Test Admin/User flows and Calendar.
 
-Secrets are not in the repo. Keep Web.config local (ignored by git).
+Open the project in Visual Studio.
 
-Screenshots (suggested)
+Copy Web.config.example to Web.config and update the connection string and credentials according to your local setup.
 
-Login • Assigned Tasks • Calendar (popover) • Create Task • Azure app registration (redirect URI).
+Build and run the project.
 
-License
+📂 Configuration
 
-MIT
+Database: Update your connection details in Web.config.
+
+Authentication: Replace Azure AD settings with your own if required.
+
+📜 License
+
+This project is licensed under the MIT License.
